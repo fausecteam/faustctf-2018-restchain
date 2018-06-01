@@ -1,0 +1,11 @@
+HTTP/1.0 200 OK
+Content-Length: 40
+Content-Type: text/plain
+X-Restchain-Block-X-Author-Url: https://0x4a42.net/
+X-Restchain-Block-X-Awesomeness: 9001
+X-Restchain-Block-X-Ctf-Url: https://2018.faustctf.net/
+X-Restchain-Previous: 6666666666666666666666666666666666666666666666666666666666666666
+X-Restchain-Signature: rMXME7BzIkbBFG6jVZ1lVHOfwdekAR9ovGXXGmTmHsDULrCac69bG141qi8iXJMQLDEe2R40sFK+CyznaMZ0BA==
+X-Restchain-Signer: tJbWTL43IvIQkQdr5QfxCsXuGcrXOHzlxQ9mB+558/Q=
+
+FAUST CTF 2018 RESTchain Genesis Block

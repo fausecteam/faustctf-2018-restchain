@@ -1,0 +1,5 @@
+export PATH := /usr/lib/go-1.10/bin:$(PATH)
+
+.PHONY: all
+all:
+	GOPATH=$(CURDIR)/.. go build -o restchain

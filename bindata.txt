@@ -1,0 +1,2 @@
+genesis-block misc/genesis-block
+restchain-acl-stdlib.js block_acl_stdlib.js

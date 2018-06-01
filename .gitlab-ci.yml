@@ -1,0 +1,76 @@
+stages:
+  - build
+  - test
+  - upload
+build_job:
+  stage: build
+  image: "debian:stretch"
+  before_script:
+    - echo deb http://ftp.debian.org/debian stretch-backports main > /etc/apt/sources.list.d/stretch-backports.list
+    - echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf
+    - echo 'APT::Install-Suggests "false";'   >> /etc/apt/apt.conf
+    - apt-get -y -qq update
+    - apt-get -y -qq install build-essential python3 openjdk-8-jdk-headless curl
+    - apt-get -y -qq install -t stretch-backports golang
+  script:
+    - make all
+    - make install
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - metadata.yml
+      - dist_root/
+      - java/restchain.jar
+      - java/RunSelfTest.class
+  only:
+    - master
+  tags:
+    - faust
+    - docker
+test_job:
+  stage: test
+  image: "debian:stretch"
+  before_script:
+    - echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf
+    - echo 'APT::Install-Suggests "false";'   >> /etc/apt/apt.conf
+    - apt-get -y -qq update
+    - apt-get -y -qq install rsync tree curl openjdk-8-jre-headless python3 python3-systemd python3-yaml python3-requests sudo
+    - curl -sL https://github.com/fausecteam/ctf-gameserver/archive/master.tar.gz | tar -C /tmp -xz
+  script:
+    - adduser --system --home /srv/restchain --group --disabled-login --no-create-home restchain
+    - adduser --system --home /srv/restchain --ingroup restchain --disabled-login --no-create-home restchain-persist
+    - rsync -av dist_root/ /
+    - install -o root -g restchain -m 750 -d /srv/restchain/data
+    - install -o restchain-persist -g restchain -m 750 -d /srv/restchain/data
+    - chown restchain:restchain /srv/restchain/bin/restchain
+    - chown restchain-persist:restchain /srv/restchain/bin/restchain-persist
+    - chmod ug+s /srv/restchain/bin/restchain-persist
+    - sudo -u restchain /srv/restchain/bin/restchain -listen localhost:6060 -storage /srv/restchain/data &
+    - sudo -u restchain /srv/restchain/bin/restchain -listen localhost:6061 -storage / -persist /bin/true -node /doesnotexist &
+    - while ! curl -so /dev/null "http://localhost:6060/api"; do printf '.'; sleep 1; done
+    - while ! curl -so /dev/null "http://localhost:6061/api"; do printf '.'; sleep 1; done; echo
+    - misc/run-full-test.sh
+    - tree -ugp /srv
+  variables:
+    CTF_GAMESERVER_CHECKOUT: /tmp/ctf-gameserver-master
+    PYTHONUNBUFFERED: y
+  only:
+    - master
+  tags:
+    - faust
+    - docker
+upload_job:
+  stage: upload
+  script:
+    - ssh ci-upload@www.faust.cs.fau.de mkdir -p "/var/www/files/internal/ci/faustctf/2018/$CI_PROJECT_NAME"
+    - tar -v -czp -H posix -f dist_root.tar.gz -C dist_root .
+    - scp metadata.yml dist_root.tar.gz "ci-upload@www.faust.cs.fau.de:/var/www/files/internal/ci/faustctf/2018/$CI_PROJECT_NAME/"
+  after_script:
+    - find "$CI_PROJECT_DIR" -mindepth 1 -delete
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - master
+  tags:
+    - faust
+    - www-upload

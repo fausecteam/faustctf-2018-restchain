@@ -1,0 +1,22 @@
+name: RESTchain
+slug: restchain
+authors:
+  - Julian Brost <julian@0x4a42.net>
+
+install:
+  debian_packages:
+    - golang-1.10/stretch-backports
+    - nodejs/stretch-backports
+  postinst_commands:
+    - adduser --system --home /srv/restchain --ingroup restchain --disabled-login --no-create-home restchain-persist
+    - install -o restchain-persist -g restchain -m 750 -d /srv/restchain/data
+    - chown restchain-persist:restchain /srv/restchain/bin/restchain-persist
+    - chmod u+s /srv/restchain/bin/restchain-persist
+    - systemctl enable restchain.service
+  prevent_outgoing_connections: True
+
+checker:
+  module: restchain.checker
+  class: RestchainChecker
+  debian_packages:
+    - python3-requests

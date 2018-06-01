@@ -1,0 +1,24 @@
+[Unit]
+Description=FAUST CTF RESTchain Service
+
+[Service]
+User=restchain
+Group=restchain
+
+ExecStartPre=/bin/rm -rf /srv/restchain/data/public
+ExecStart=/srv/restchain/bin/restchain -storage /srv/restchain/data
+PermissionsStartOnly=yes
+Restart=on-failure
+
+CPUQuota=100%
+LimitNPROC=1280
+MemoryMax=2048M
+
+PrivateTmp=yes
+ProtectControlGroups=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/srv/restchain/data
+
+[Install]
+WantedBy=multi-user.target
